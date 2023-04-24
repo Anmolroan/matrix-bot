@@ -19,13 +19,13 @@ matrixClient.startClient();
 
 
 
-matrixClient.on('sync', (state, prevState, data) => {
+matrixClient.on('sync', (state) => {
   if (state === 'PREPARED') {
     console.log('Matrix client synced and ready to receive messages');
   }
 });
 
-matrixClient.on('Room.timeline', (event, room, toStartOfTimeline, removed, data) => {
+matrixClient.on('Room.timeline', (event, room) => {
   if (room.roomId === roomId && event.getType() === 'm.room.message') {
     const messageData = {
       sender: event.getSender(),
@@ -46,7 +46,7 @@ fastify.register(websocket);
 fastify.get("/getRooms", async (request, reply) => {
 
   const rooms =matrixClient.getRooms();
-const roomObj=  matrixClient.getRooms().map(room => {
+  const roomObj=  matrixClient.getRooms().map(room => {
       return(`Room name: ${room.name}, Room ID: ${room.roomId}`);
     });
     reply.send(roomObj)
@@ -61,7 +61,6 @@ fastify.get('/messages/real-time', { websocket: true }, (connection, req) => {
 
   connection.socket.on('close', () => {
     console.log('Websocket connection closed');
-    // Remove the client from the clients array
     fastify.websocketServer.clients.delete(connection.socket);
   });
 });
@@ -86,7 +85,7 @@ fastify.get("/messages", async (request, reply) => {
 
   matrixClient.on(
     "Room.timeline",
-    (event, room, toStartOfTimeline, removed, data) => {
+    (event, room) => {
       if (room.roomId === roomId && event.getType() === "m.room.message") {
         const messageData = {
           sender: event.getSender(),
